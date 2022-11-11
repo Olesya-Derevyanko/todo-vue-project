@@ -1,6 +1,6 @@
 <script>
 import FilterArea from "./components/FilterArea.vue";
-import TaskRow from "./components/TaskRow.vue";
+import TaskList from "./components/TaskList.vue";
 
 export default {
   created() {},
@@ -11,14 +11,13 @@ export default {
     return {
       taskArray: [],
       newTextForTask: "",
-      isOpenInputId: -1,
-      filter: "All",
+      selectedFilter: "All",
     };
   },
 
   methods: {
     addToTasks() {
-      if (this.newTextForTask.length > 1) {
+      if (this.newTextForTask.length > 0) {
         const newTask = {
           id: this.taskArray.length,
           title: this.newTextForTask,
@@ -49,20 +48,15 @@ export default {
         }
         return task;
       });
-      this.setCloseInput();
     },
 
-    setOpenInput(taskId) {
-      this.isOpenInputId = taskId;
-    },
-
-    setCloseInput() {
-      this.isOpenInputId = -1;
+    onChangeSelectedFilter(newFilter) {
+      this.selectedFilter = newFilter;
     },
   },
   computed: {
     filteredTasks() {
-      switch (this.filter) {
+      switch (this.selectedFilter) {
         case "All":
           return this.taskArray;
         case "Completed":
@@ -75,7 +69,7 @@ export default {
     },
   },
   mounted() {},
-  components: { TaskRow, FilterArea },
+  components: { TaskList, FilterArea },
 };
 </script>
 
@@ -86,19 +80,16 @@ export default {
       <button type="submit">></button>
     </form>
 
-    <TaskRow
-      :key="item.id"
-      v-for="item in filteredTasks"
-      :taskValue="item"
-      :isOpenInputId="isOpenInputId"
+    <TaskList
+      :filteredTasks="filteredTasks"
       @onChangeIsCheckedTask="onChangeIsCheckedTask"
       @onChangeTitleTask="onChangeTitleTask"
       @deleteFromTasks="deleteFromTasks"
-      @setOpenInput="setOpenInput"
-      @setCloseInput="setCloseInput"
-    >
-    </TaskRow>
-    <FilterArea v-model="filter"></FilterArea>
+    ></TaskList>
+    <FilterArea
+      :selectedFilter="selectedFilter"
+      @onChangeSelectedFilter="onChangeSelectedFilter"
+    ></FilterArea>
   </div>
 </template>
 

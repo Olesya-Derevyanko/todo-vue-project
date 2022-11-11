@@ -1,4 +1,6 @@
 <script>
+// import { nextTick } from "vue";
+
 export default {
   props: {
     taskValue: {
@@ -6,7 +8,7 @@ export default {
       title: String,
       isChecked: Boolean,
     },
-    isOpenInputId: Number,
+    activeTaskId: Number,
   },
   emits: [
     "onChangeIsCheckedTask",
@@ -17,26 +19,45 @@ export default {
   ],
   data() {
     return {
-      changedTitleOftask: this.taskValue.title,
+      changedTitleOfTask: this.taskValue.title,
     };
   },
 
   methods: {
     setFocus() {
       setTimeout(() => {
-        this.$refs["`input-${taskValue.id}`"].focus();
+        this.$refs[`input-${this.taskValue.id}`].focus();
       }, 10);
+    },
+
+    async onClickInput() {
+      this.$emit("setOpenInput", this.taskValue.id);
+      this.setFocus();
+    },
+
+    setChangesFromTaskText() {
+      this.$emit(
+        "onChangeTitleTask",
+        this.changedTitleOfTask,
+        this.taskValue.id
+      );
+      this.$emit("setCloseInput");
+    },
+
+    setCheckedTask(event) {
+      this.$emit(
+        "onChangeIsCheckedTask",
+        event.target.checked,
+        this.taskValue.id
+      );
+    },
+
+    deleteTask() {
+      this.$emit("deleteFromTasks", this.taskValue.id);
     },
   },
 
-  computed: {
-    checkOpenInput() {
-      if (this.isOpenInputId === this.taskValue.id) {
-        this.setFocus();
-        return true;
-      } else return false;
-    },
-  },
+  computed: {},
 
   mounted() {},
 };
@@ -46,41 +67,35 @@ export default {
   <div class="task-area">
     <form
       class="task-content"
-      v-if="checkOpenInput"
-      @submit.prevent="
-        $emit('onChangeTitleTask', changedTitleOftask, taskValue.id)
-      "
+      v-if="activeTaskId === taskValue.id"
+      @submit.prevent="setChangesFromTaskText"
     >
       <input
         class="task-input"
-        ref="`input-${taskValue.id}`"
+        :ref="`input-${taskValue.id}`"
         type="text"
-        v-model="changedTitleOftask"
-        @blur="$emit('onChangeTitleTask', changedTitleOftask, taskValue.id)"
+        v-model="changedTitleOfTask"
+        @blur="setChangesFromTaskText"
       />
     </form>
+
     <div v-else class="task-content">
       <input
         class="task-check"
         type="checkbox"
         :checked="taskValue.isChecked"
-        @click="
-          $emit('onChangeIsCheckedTask', $event.target.checked, taskValue.id)
-        "
+        @click="setCheckedTask"
       />
+
       <p
-        @dblclick="$emit('setOpenInput', taskValue.id)"
+        @dblclick="onClickInput"
         class="task-title"
         :class="{ checked: taskValue.isChecked }"
       >
         {{ taskValue.title }}
       </p>
-      <button
-        class="delete-task-button"
-        @click="$emit('deleteFromTasks', taskValue.id)"
-      >
-        x
-      </button>
+
+      <button class="delete-task-button" @click="deleteTask">x</button>
     </div>
   </div>
 </template>
@@ -153,6 +168,5 @@ export default {
 h1 {
   font-weight: 500;
   font-size: 2.6rem;
-  /* top: -10px; */
 }
 </style>

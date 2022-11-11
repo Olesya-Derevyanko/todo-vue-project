@@ -1,27 +1,56 @@
 <script>
+import { storeToRefs } from "pinia";
+import { useTasksStore } from "../stores/todoStore";
+
 export default {
+  setup() {
+    const taskArrayState = useTasksStore();
+    const { activeTaskId } = storeToRefs(taskArrayState);
+
+    const {
+      deleteFromTasks,
+      onChangeIsCheckedTask,
+      onChangeTitleTask,
+      setOpenInput,
+      setCloseInput,
+    } = taskArrayState;
+
+    return {
+      activeTaskId,
+      taskArrayState,
+      deleteFromTasks,
+      onChangeIsCheckedTask,
+      onChangeTitleTask,
+      setOpenInput,
+      setCloseInput,
+    };
+  },
+
   props: {
     taskValue: {
       id: Number,
       title: String,
       isChecked: Boolean,
     },
-    isOpenInputId: Number,
   },
-  emits: [
-    "onChangeIsCheckedTask",
-    "onChangeTitleTask",
-    "deleteFromTasks",
-    "setOpenInput",
-    "setCloseInput",
-  ],
+
   data() {
     return {
-      changedTitleOftask: this.taskValue.title,
+      changedTitleOfTask: this.taskValue.title,
     };
   },
 
   methods: {
+    setChangeInput() {
+      this.setOpenInput(this.taskValue.id);
+
+      if (this.activeTaskId === this.taskValue.id) {
+        this.setFocus();
+        return true;
+      }
+      return false;
+    },
+
     setFocus() {
       setTimeout(() => {
         this.$refs["`input-${taskValue.id}`"].focus();
@@ -29,14 +58,9 @@ export default {
     },
   },
 
-  computed: {
-    checkOpenInput() {
-      if (this.isOpenInputId === this.taskValue.id) {
-        this.setFocus();
-        return true;
-      } else return false;
-    },
-  },
+  watch: {},
+
+  computed: {},
 
   mounted() {},
 };
@@ -46,39 +70,33 @@ export default {
   <div class="task-area">
     <form
       class="task-content"
-      v-if="checkOpenInput"
-      @submit.prevent="
-        $emit('onChangeTitleTask', changedTitleOftask, taskValue.id)
-      "
+      v-if="activeTaskId === taskValue.id"
+      @submit.prevent="onChangeTitleTask(changedTitleOfTask, taskValue.id)"
     >
       <input
         class="task-input"
         ref="`input-${taskValue.id}`"
         type="text"
-        v-model="changedTitleOftask"
-        @blur="$emit('onChangeTitleTask', changedTitleOftask, taskValue.id)"
+        v-model="changedTitleOfTask"
+        @blur="onChangeTitleTask(changedTitleOfTask, taskValue.id)"
       />
     </form>
+
     <div v-else class="task-content">
       <input
         class="task-check"
         type="checkbox"
         :checked="taskValue.isChecked"
-        @click="
-          $emit('onChangeIsCheckedTask', $event.target.checked, taskValue.id)
-        "
+        @click="onChangeIsCheckedTask($event.target.checked, taskValue.id)"
       />
       <p
-        @dblclick="$emit('setOpenInput', taskValue.id)"
+        @dblclick="setChangeInput"
         class="task-title"
         :class="{ checked: taskValue.isChecked }"
       >
         {{ taskValue.title }}
       </p>
-      <button
-        class="delete-task-button"
-        @click="$emit('deleteFromTasks', taskValue.id)"
-      >
+      <button class="delete-task-button" @click="deleteFromTasks(taskValue.id)">
         x
       </button>
     </div>

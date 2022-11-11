@@ -1,68 +1,42 @@
 <script>
+import { storeToRefs } from "pinia";
 import FilterArea from "./components/FilterArea.vue";
-import TaskRow from "./components/TaskRow.vue";
+import TaskList from "./components/TaskList.vue";
+import { useTasksStore } from "./stores/todoStore";
 
 export default {
+  setup() {
+    const taskArrayState = useTasksStore();
+    const { taskArray, selectedFilter } = storeToRefs(taskArrayState);
+    const { addToTasks, setCloseInput, setOpenInput } = taskArrayState;
+    return {
+      taskArrayState,
+      taskArray,
+      selectedFilter,
+      addToTasks,
+      setOpenInput,
+      setCloseInput,
+    };
+  },
   created() {},
 
   unmounted() {},
 
   data() {
     return {
-      taskArray: [],
       newTextForTask: "",
-      isOpenInputId: -1,
-      filter: "All",
     };
   },
 
   methods: {
-    addToTasks() {
-      if (this.newTextForTask.length > 1) {
-        const newTask = {
-          id: this.taskArray.length,
-          title: this.newTextForTask,
-          isChecked: false,
-        };
-        this.newTextForTask = "";
-        this.taskArray.push(newTask);
-      }
-    },
-
-    deleteFromTasks(taskId) {
-      this.taskArray = this.taskArray.filter((task) => task.id !== taskId);
-    },
-
-    onChangeIsCheckedTask(isChecked, taskId) {
-      this.taskArray.map((task) => {
-        if (task.id === taskId) {
-          task.isChecked = isChecked;
-        }
-        return task;
-      });
-    },
-
-    onChangeTitleTask(newTitle, taskId) {
-      this.taskArray.map((task) => {
-        if (task.id === taskId) {
-          task.title = newTitle;
-        }
-        return task;
-      });
-      this.setCloseInput();
-    },
-
-    setOpenInput(taskId) {
-      this.isOpenInputId = taskId;
-    },
-
-    setCloseInput() {
-      this.isOpenInputId = -1;
+    addTask() {
+      this.addToTasks(this.newTextForTask);
+      this.newTextForTask = "";
     },
   },
   computed: {
     filteredTasks() {
-      switch (this.filter) {
+      switch (this.selectedFilter) {
         case "All":
           return this.taskArray;
         case "Completed":
@@ -75,30 +49,18 @@ export default {
     },
   },
   mounted() {},
-  components: { TaskRow, FilterArea },
+  components: { TaskList, FilterArea },
 };
 </script>
 
 <template>
   <div class="task-list-area">
-    <form class="form-new-task" @submit.prevent="addToTasks">
+    <form class="form-new-task" @submit.prevent="addTask">
       <input type="text" v-model.trim="newTextForTask" />
       <button type="submit">></button>
     </form>
-
-    <TaskRow
-      :key="item.id"
-      v-for="item in filteredTasks"
-      :taskValue="item"
-      :isOpenInputId="isOpenInputId"
-      @onChangeIsCheckedTask="onChangeIsCheckedTask"
-      @onChangeTitleTask="onChangeTitleTask"
-      @deleteFromTasks="deleteFromTasks"
-      @setOpenInput="setOpenInput"
-      @setCloseInput="setCloseInput"
-    >
-    </TaskRow>
-    <FilterArea v-model="filter"></FilterArea>
+    <TaskList></TaskList>
+    <FilterArea></FilterArea>
   </div>
 </template>
 

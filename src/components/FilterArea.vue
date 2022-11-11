@@ -1,27 +1,35 @@
 <script>
+import { storeToRefs } from "pinia";
+import { useTasksStore } from "../stores/todoStore";
+
 export default {
-  props: ["modelValue"],
-  emits: ["update:modelValue"],
+  setup() {
+    const taskArrayState = useTasksStore();
+
+    const { filterArray } = taskArrayState;
+    const { selectedFilter } = storeToRefs(taskArrayState);
+
+    return {
+      filterArray,
+      selectedFilter,
+    };
+  },
+
   data() {
     return {};
   },
 
   methods: {
     checkFilter(filterValue) {
-      return this.modelValue === filterValue;
+      return this.selectedFilter === filterValue;
+    },
+
+    onClick(filterItem) {
+      this.selectedFilter = filterItem;
     },
   },
 
-  computed: {
-    currentFilter: {
-      get() {
-        return this.modelValue;
-      },
-      set(value) {
-        this.$emit("update:modelValue", value);
-      },
-    },
-  },
+  computed: {},
 
   mounted() {},
 };
@@ -29,60 +37,19 @@ export default {
 
 <template>
   <div class="filter-area">
-    <input
-      class="checkbox-filter"
-      type="radio"
-      id="All"
-      value="All"
-      v-model="currentFilter"
-    />
-    <label
+    <p
+      v-for="(filterItem, index) in filterArray"
+      :key="index"
       class="filter-item"
-      :class="{ checked: checkFilter('All') }"
-      for="All"
-      >All</label
+      :class="{ checked: checkFilter(filterItem) }"
+      @click="onClick(filterItem)"
     >
-
-    <input
-      class="checkbox-filter"
-      type="radio"
-      id="Active"
-      value="Active"
-      v-model="currentFilter"
-    />
-    <label
-      class="filter-item"
-      :class="{ checked: checkFilter('Active') }"
-      for="Active"
-      >Active</label
-    >
-
-    <input
-      class="checkbox-filter"
-      type="radio"
-      id="Completed"
-      value="Completed"
-      v-model="currentFilter"
-    />
-    <label
-      class="filter-item"
-      :class="{ checked: checkFilter('Completed') }"
-      for="Completed"
-      >Completed</label
-    >
+      {{ filterItem }}
+    </p>
   </div>
 </template>
 
 <style scoped>
-.task-content {
-  display: flex;
-  width: 100%;
-}
-
-.checkbox-filter {
-  display: none;
-}
-
 .filter-area {
   display: flex;
   justify-content: space-between;
@@ -92,6 +59,7 @@ export default {
 .filter-item {
   font-size: 18px;
   color: grey;
+  cursor: pointer;
 }
 
 .checked {
